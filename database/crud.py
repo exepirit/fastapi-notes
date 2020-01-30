@@ -7,7 +7,7 @@ from . import schemes
 async def create_board(db: Session, board: schemes.BoardBase) -> models.Board:
     db_board = models.Board(**board.dict())
     db.add(db_board)
-    await db.commit()
+    db.commit()
     db.refresh(db_board)
     return db_board
 
@@ -24,10 +24,10 @@ def delete_board(db: Session, board: schemes.Board) -> bool:
     return db.query(models.Board).filter(models.Board.id == board.id).delete() > 0
 
 
-async def create_note(db: Session, note: schemes.Note) -> models.Note:
-    note_db = models.Note(**note.dict())
+async def create_note(db: Session, board_id: int, note: schemes.NoteBase) -> models.Note:
+    note_db = models.Note(board_id=board_id, **note.dict())
     db.add(note_db)
-    await db.commit()
+    db.commit()
     db.refresh(note_db)
     return note_db
 
