@@ -20,8 +20,8 @@ def get_boards(db: Session) -> List[models.Board]:
     return db.query(models.Board).all()
 
 
-def delete_board(db: Session, board: schemes.Board) -> None:
-    db.query(models.Board).filter(models.Board.id == board.id).delete()
+def delete_board(db: Session, board: schemes.Board) -> bool:
+    return db.query(models.Board).filter(models.Board.id == board.id).delete() > 0
 
 
 def create_note(db: Session, board_id: int, note: schemes.NoteBase) -> models.Note:
@@ -33,5 +33,5 @@ def create_note(db: Session, board_id: int, note: schemes.NoteBase) -> models.No
     return note_db
 
 
-def delete_note(db: Session, note: schemes.Note) -> None:
-    db.query(models.Note).filter(models.Note.id == note.id).delete()
+def delete_note(db: Session, note: schemes.Note) -> bool:
+    return db.query(models.Note).filter(models.Note.id == note.id).delete() > 0
