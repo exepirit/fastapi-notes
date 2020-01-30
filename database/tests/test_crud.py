@@ -6,7 +6,7 @@ Config.DB_STRING = "sqlite:///:memory:"
 from database import crud
 from database.models import Board, Note
 from database.database import SessionLocal
-from database.schemes import BoardBase
+from database.schemes import BoardBase, NoteBase
 
 
 class CrudTest(unittest.TestCase):
@@ -60,3 +60,21 @@ class CrudTest(unittest.TestCase):
             len(self.db.query(Board).filter(board_id == board).all()),
             0
         )
+
+    def test__base_note__create_note__note_in_db(self):
+        board = crud.create_board(self.db, BoardBase(name="Test board 5"))
+        note_base = NoteBase(text="text")
+
+        crud.create_note(self.db, board.id, note_base)
+
+        note = self.db.query(Note).first()
+        self.assertEqual(note.text, note_base.text)
+        self.assertEqual(note.board_id, board.id)
+
+    def test__note_in_db__delete_note__note_not_in_db(self):
+        board = crud.create_board(self.db, BoardBase(name="Test board 6"))
+        note = crud.create_note(self.db, board.id, NoteBase(text="text 2"))
+
+        crud.delete_note(self.db, note)
+
+        self.assertEqual(self.db.query(Note).filter(Note.board_id == board.id).first(), None)

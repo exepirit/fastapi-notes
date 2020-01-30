@@ -25,8 +25,13 @@ def delete_board(db: Session, board: schemes.Board) -> None:
 
 
 def create_note(db: Session, board_id: int, note: schemes.NoteBase) -> models.Note:
-    raise Exception("implement me")
+    board = db.query(models.Board).filter(models.Board.id == board_id).first()
+    note_db = models.Note(board=board, **note.dict())
+    db.add(note_db)
+    db.commit()
+    db.refresh(note_db)
+    return note_db
 
 
-def delete_note(db: Session, note: schemes.NoteBase) -> bool:
-    raise Exception("implement me")
+def delete_note(db: Session, note: schemes.Note) -> None:
+    db.query(models.Note).filter(models.Note.id == note.id).delete()
