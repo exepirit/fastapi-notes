@@ -8,4 +8,4 @@ class Board(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    notes = relationship("Note", back_populates="board")
+    notes = relationship("Note")
