@@ -7,6 +7,7 @@ class NoteBase(BaseModel):
 
 class Note(NoteBase):
     id: int
+    board_id: int
 
     class Config:
         orm_mode = True
