@@ -1,36 +1,42 @@
 from typing import List
-from sqlalchemy.orm import Session
-from . import models
+from . import tables
 from . import schemes
+from .database import database
+from .exceptions import NotFoundError
 
 
-async def create_board(db: Session, board: schemes.BoardBase) -> models.Board:
-    db_board = models.Board(**board.dict())
-    db.add(db_board)
-    db.commit()
-    db.refresh(db_board)
-    return db_board
+async def create_board(board: schemes.BoardBase):
+    query = tables.boards.insert().values(**board.dict(exclude={"notes"}))
+    return await database.execute(query)
 
 
-def get_board(db: Session, board_id: int) -> models.Board:
-    return db.query(models.Board).filter(models.Board.id == board_id).first()
+async def get_board(board_id: int) -> schemes.Board:
+    board = await database.fetch_one(
+        tables.boards.select().where(tables.boards.c.id == board_id)
+    )
+    if board is None:
+        raise NotFoundError()
+    notes = await database.fetch_all(
+        tables.notes.select().where(tables.boards.c.id == board.id)
+    )
+    return schemes.Board(**board, notes=notes)
 
 
-def get_boards(db: Session) -> List[models.Board]:
-    return db.query(models.Board).all()
+async def get_boards() -> List[schemes.Board]:
+    query = tables.boards.select()
+    return await database.fetch_all(query)
 
 
-def delete_board(db: Session, board: schemes.Board) -> bool:
-    return db.query(models.Board).filter(models.Board.id == board.id).delete() > 0
+async def delete_board(board_id: int) -> bool:
+    query = tables.boards.delete().where(tables.boards.c.id == board_id)
+    return await database.execute(query) > 0
 
 
-async def create_note(db: Session, board_id: int, note: schemes.NoteBase) -> models.Note:
-    note_db = models.Note(board_id=board_id, **note.dict())
-    db.add(note_db)
-    db.commit()
-    db.refresh(note_db)
-    return note_db
+async def create_note(board_id: int, note: schemes.NoteBase) -> schemes.Note:
+    query = tables.notes.insert().values(**note.dict(), board_id=board_id)
+    return await database.fetch_one(query)
 
 
-def delete_note(db: Session, note: schemes.Note) -> bool:
-    return db.query(models.Note).filter(models.Note.id == note.id).delete() > 0
+async def delete_note(note_id: int) -> bool:
+    query = tables.notes.delete().where(tables.notes.c.id == note_id)
+    return await database.execute(query) > 0
