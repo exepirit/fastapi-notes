@@ -1,43 +1,52 @@
 from typing import List
-from fastapi import Depends, HTTPException
-from sqlalchemy.orm import Session
-from . import app, get_db
-from database import crud, schemes
+from fastapi import HTTPException
+from . import app
+from database import crud, schemes, exceptions
+from database.database import database
+
+
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
 
 
 @app.get("/api/board", response_model=List[schemes.Board], response_model_exclude={"notes"},
          tags=["Board"])
-def get_boards(db: Session = Depends(get_db)):
-    return crud.get_boards(db)
+async def get_boards():
+    return await crud.get_boards()
 
 
 @app.post("/api/board", response_model=schemes.Board, response_model_exclude={"board_id"},
           tags=["Board"])
-async def add_board(board: schemes.BoardBase, db: Session = Depends(get_db)):
-    return await crud.create_board(db, board)
+async def add_board(board: schemes.BoardBase):
+    return await crud.create_board(board)
 
 
 @app.get("/api/board/{board_id}", response_model=schemes.Board, tags=["Board"])
-def get_board(board_id: int, db: Session = Depends(get_db)):
-    board = crud.get_board(db, board_id)
-    return board
+async def get_board(board_id: int):
+    try:
+        return await crud.get_board(board_id)
+    except exceptions.NotFoundError:
+        raise HTTPException(status_code=404, detail="Board not found")
 
 
 @app.delete("/api/board/{board_id}", tags=["Board"])
-async def delete_board(board_id: int, db: Session = Depends(get_db)):
-    board = schemes.Board(id=board_id)
-    if not crud.delete_board(db, board):
-        raise HTTPException(status_code=404)
+async def delete_board(board_id: int):
+    await crud.delete_board(board_id)
 
 
 @app.post("/api/note", response_model=schemes.Note, tags={"Note"})
-async def add_note(board_id: int, note: schemes.NoteBase, db: Session = Depends(get_db)):
-    if crud.get_board(db, board_id) is None:
+async def add_note(board_id: int, note: schemes.NoteBase):
+    if await crud.get_board(board_id) is None:
         raise HTTPException(status_code=404, detail="Board not found")
-    return await crud.create_note(db, board_id, note)
+    return await crud.create_note(board_id, note)
 
 
 @app.delete("/api/note/{note_id}", tags={"Note"})
-def delete_note(note_id: int, db: Session = Depends(get_db)):
-    note = schemes.Note(id=note_id, board_id=-1)
-    return crud.delete_note(db, note)
+async def delete_note(note_id: int):
+    await crud.delete_note(note_id)
