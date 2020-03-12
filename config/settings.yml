@@ -5,3 +5,5 @@ development:
   debug: true
 production:
   debug: false
+testing:
+  db_string: "sqlite:///:memory:"
