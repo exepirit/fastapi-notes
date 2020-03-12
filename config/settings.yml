@@ -1,0 +1,9 @@
+default:
+  debug: true
+  db_string: "sqlite:///database.db"
+development:
+  debug: true
+production:
+  debug: false
+testing:
+  db_string: "sqlite:///:memory:"

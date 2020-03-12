@@ -1,8 +1,5 @@
 import unittest
 from sqlalchemy.orm import Session
-from config import Config
-
-Config.DB_STRING = "sqlite:///:memory:"
 from database import crud
 from database.models import Board, Note
 from database.database import SessionLocal
