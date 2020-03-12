@@ -1,4 +1,4 @@
-import unittest
+import pytest
 from sqlalchemy.orm import Session
 from database import crud
 from database.models import Board, Note
@@ -6,72 +6,68 @@ from database.database import SessionLocal
 from database.schemes import BoardBase, NoteBase
 
 
-class CrudTest(unittest.TestCase):
-    db: Session
+@pytest.fixture()
+def database():
+    db: Session = SessionLocal()
+    db.query(Board).delete()
+    db.query(Note).delete()
+    yield db
+    db.close()
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.db = SessionLocal()
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        cls.db.close()
+def test__base_board__create_board__board_in_db(database):
+    board = BoardBase(name="Test board 1")
 
-    def setUp(self) -> None:
-        self.db.query(Board).delete()
-        self.db.query(Note).delete()
+    crud.create_board(database, board)
 
-    def test__base_board__create_board__board_in_db(self):
-        board = BoardBase(name="Test board 1")
+    db_board = database.query(Board).first()
+    assert db_board.name == board.name
 
-        crud.create_board(self.db, board)
 
-        db_board = self.db.query(Board).first()
-        self.assertEqual(db_board.name, board.name)
+def test__board_in_db__get_board__are_equal(database):
+    board_in_db = Board(name="Test board 2")
+    database.add(board_in_db)
+    database.commit()
+    database.refresh(board_in_db)
 
-    def test__board_in_db__get_board__are_equal(self):
-        board_in_db = Board(name="Test board 2")
-        self.db.add(board_in_db)
-        self.db.commit()
-        self.db.refresh(board_in_db)
+    board = crud.get_board(database, board_in_db.id)
+    assert board.name == board_in_db.name
 
-        board = crud.get_board(self.db, board_in_db.id)
 
-        self.assertEqual(board.name, board_in_db.name)
+def test__board_array__get_boards__len_is_equal(database):
+    boards = [crud.create_board(database, BoardBase(name=f"Test board 3-{i}"))
+              for i in range(0, 10)]
 
-    def test__board_array__get_boards__len_is_equal(self):
-        boards = [crud.create_board(self.db, BoardBase(name=f"Test board 3-{i}"))
-                  for i in range(0, 10)]
+    boards_in_db = crud.get_boards(database)
+    assert len(boards_in_db) == len(boards)
 
-        boards_in_db = crud.get_boards(self.db)
 
-        self.assertEqual(len(boards_in_db), len(boards))
+def test__board__delete_board__board_not_in_db(database):
+    board = crud.create_board(database, BoardBase(name="Test board 4"))
+    board_id = board.id
 
-    def test__board__delete_board__board_not_in_db(self):
-        board = crud.create_board(self.db, BoardBase(name="Test board 4"))
-        board_id = board.id
+    crud.delete_board(database, Board(id=board.id, name="Test board 4"))
 
-        crud.delete_board(self.db, Board(id=board.id, name="Test board 4"))
+    boards = database.query(Board).filter(board_id == board).all()
+    assert len(boards) == 0
 
-        self.assertEqual(
-            len(self.db.query(Board).filter(board_id == board).all()),
-            0
-        )
 
-    def test__base_note__create_note__note_in_db(self):
-        board = crud.create_board(self.db, BoardBase(name="Test board 5"))
-        note_base = NoteBase(text="text")
+def test__base_note__create_note__note_in_db(database):
+    board = crud.create_board(database, BoardBase(name="Test board 5"))
+    note_base = NoteBase(text="text")
 
-        crud.create_note(self.db, board.id, note_base)
+    crud.create_note(database, board.id, note_base)
 
-        note = self.db.query(Note).first()
-        self.assertEqual(note.text, note_base.text)
-        self.assertEqual(note.board_id, board.id)
+    note = database.query(Note).first()
+    assert note.text == note_base.text
+    assert note.board_id == board.id
 
-    def test__note_in_db__delete_note__note_not_in_db(self):
-        board = crud.create_board(self.db, BoardBase(name="Test board 6"))
-        note = crud.create_note(self.db, board.id, NoteBase(text="text 2"))
 
-        crud.delete_note(self.db, note)
+def test__note_in_db__delete_note__note_not_in_db(database):
+    board = crud.create_board(database, BoardBase(name="Test board 6"))
+    note = crud.create_note(database, board.id, NoteBase(text="text 2"))
 
-        self.assertEqual(self.db.query(Note).filter(Note.board_id == board.id).first(), None)
+    crud.delete_note(database, note)
+
+    note_in_db = database.query(Note).filter(Note.board_id == board.id).first()
+    assert note_in_db is None
