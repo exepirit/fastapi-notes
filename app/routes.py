@@ -25,7 +25,7 @@ def get_board(board_id: int, db: Session = Depends(get_db)):
 
 @app.delete("/api/board/{board_id}", tags=["Board"])
 def delete_board(board_id: int, db: Session = Depends(get_db)):
-    board = schemes.Board(id=board_id)
+    board = schemes.Board(id=board_id, name="")
     if not crud.delete_board(db, board):
         raise HTTPException(status_code=404)
 
