@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from config import Config
+from dynaconf import settings
 from database.models import base
 from database.database import SessionLocal, engine
 
 base.Base.metadata.create_all(bind=engine)
-app = FastAPI(debug=Config.DEBUG)
+app = FastAPI(debug=settings.DEBUG)
 
 
 def get_db():
