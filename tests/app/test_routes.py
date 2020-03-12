@@ -22,7 +22,7 @@ def test__board__get_boards__returns_list_with_board(mocker, app_client, board_i
     response = app_client.get("/api/board")
 
     assert response.ok
-    expected_text = f"[{board.json(exclude={'board_id'}, separators=SEPARATORS)}]"
+    expected_text = f"[{board.json(exclude={'board_id', 'notes'}, separators=SEPARATORS)}]"
     assert response.text == expected_text
 
 
