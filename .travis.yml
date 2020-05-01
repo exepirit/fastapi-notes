@@ -1,4 +1,4 @@
-languange: python
+language: python
 python:
 - '3.8'
 jobs:
@@ -16,7 +16,9 @@ jobs:
   - stage: Deploy
     name: Deploy to Heroku
     if: branch = master
+    script: skip
     deploy:
       provider: heroku
+      app: fastapi-notes
       api_key:
         secure: lL77oMGbkzujjtET4cmNxyyBI4jeaFZ0QnZLTfcn81EFLET591rLdmr1MkoqC02yROCILd4QFR445LuRAMShCPlo+vzkzm7HBu12jMTutNb2Nzj8YZshMVthyp7cbIabFMUW8nvG8s27iZW4XGOGerNEIWoRb+lrY4/hH2jCzkDI4NcM6d8Fb1Tua1Y0v4C5TDL/0aDPzbCetFtaLRRS+UDQntGLtb+uC30BEjULBylc+NFYSRJGzi1oIGoFahgJA8BJ6iTC8qXj2mRAc+NWTXKHk9tqSX/I8hULyfA8v7it2srgFIDvjP1r35K0S2UQ72bs5OjSLy5ek4WrEqs0FpCgVjuBkzksbBjFNwlH/3jjgSNajaE4/Hk0nZQtdClTOB+5RhtngjI10oR+2YGcOUm+1Rx1Juuq+19p3vDSHjV1YPcsUmAIbH1uXgSbcDWUoS7Uj0j38POcawHUmLlEv2nLS5UbP1G2Toso4UMjaOco5/sgUD3k4Dj8LS2aoEmwl7HT2+FO398nhI/7pgSRegT9YrK5XtoiPXgPzYFQ6xsF8LvZiNflTgleg7Sx9d28UN71QBaNGSuA2x0aGtR6YA47Y+ZnOHPWm/rR62vshoQpWD1xdOkSjdqisDFRFxTo+qUji8ApAe5tdU7/Z3eQcMIGd2erzC92Pe5mxQ8lSZA=
