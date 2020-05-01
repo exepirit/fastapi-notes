@@ -21,5 +21,4 @@ jobs:
       app: fastapi-notes
       on:
         repo: exepirit/fastapi-notes
-      api_key:
-        secure: $HEROKU_TOKEN
+      api_key: $HEROKU_TOKEN
