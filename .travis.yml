@@ -16,8 +16,6 @@ jobs:
   - stage: Deploy
     name: Deploy to Heroku
     if: branch = master
-    install:
-    - python3 -m pip install -r requirements.txt
     deploy:
       provider: heroku
       api_key:
